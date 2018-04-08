@@ -1,0 +1,3 @@
+Chopsticks is a fun game typically played by manipulating quantities held on your hands in order to send your opponent to the lose state 0 0.
+
+Chopsticks is a fun game typically played by manipulating quantities held on your hands in order to send your opponent to the lose state 0 0. It can also be played verbally. Both an exercise in memory and strategy this simple game is very fun to play. Valid moves include them "hit" where you add the quantity on your hand to the opponents hand (in mod 5). You may also "split" which entails redistributing the amounts on your own hand. If you provide an invalid move alexa will tell you which moves are valid so don't worry.

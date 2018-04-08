@@ -165,7 +165,9 @@ def get_welcome_response(help=False):
     # table=get_table()
     speech_output = "Welcome to the chopsticks arena ... " \
                     "Today you will be competing against a robot in a really fun game. Please note "\
-                    "my hands are allways listed first"
+                    "my hands are allways listed first. "\
+                    "You can place a move by saying something like move 1 2 1 1, "\
+                    "where the numbers specify the state"
     #+table["1_1_1_1"] #+ str(os.listdir())
     
     if help:
@@ -222,6 +224,11 @@ def place(intent, session):
     # NEED TO GET NUMBERS OUT OF INTENT!!!!!!!!!!!!!!
     try:
         proposed = intent['slots']['number']['value']
+
+        if " " not in proposed and len(proposed) == 4:
+            p=list(proposed)
+            proposed=" ".join(p)
+
         speech_output = "old is " + state.replace("_", " ") + " and new is " + proposed
         proposed = freeze(formatState(unfreeze(proposed.replace(" ", "_"))))
         nms=nextMoves(unfreeze(flip_hands(state)))
@@ -230,7 +237,7 @@ def place(intent, session):
             speech_output += " and this was accepted. "
 
             if gameOver(unfreeze(proposed)):
-                speech_output += "And so you WIN! GREAT JOB. Play again soon"
+                speech_output += " And so you WIN! GREAT JOB. Play again soon"
                 should_end_session = True
             else:
                 speech_output += "For my move I will update the current state to "
@@ -238,7 +245,7 @@ def place(intent, session):
                 speech_output += compMove.replace("_", " ")
                 session_attributes["state"] = compMove
                 if gameOver(unfreeze(compMove)):
-                    speech_output+="AND SO you lose. Play again soon."
+                    speech_output+=" AND SO you lose. Play again soon."
                     should_end_session=True
                 else:
                     speech_output += ". It is now your turn."
