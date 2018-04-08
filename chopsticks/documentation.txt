@@ -1,0 +1,36 @@
+documentation:
+
+
+You need a aws account and an amazon developer account
+
+Warning: these require a credit card 
+
+go to aws lamda
+
+make a lambda function (either from blue print or resuse code similar to what is in this project folder)
+
+when creating need to set something as default
+
+add a alexa skill kit thing
+
+
+then go to alexa skills (the other account)
+
+create a custom skill
+
+name 
+
+invocation name
+
+intents (make a json)
+
+link to lambda function
+
+
+save and build
+
+test
+
+put on store
+
+
