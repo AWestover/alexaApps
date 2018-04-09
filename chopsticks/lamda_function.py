@@ -36,8 +36,8 @@ def build_speechlet_response(title, output, reprompt_text, should_end_session):
         },
         'card': {
             'type': 'Simple',
-            'title': "SessionSpeechlet - " + title,
-            'content': "SessionSpeechlet - " + output
+            'title': title,#"SessionSpeechlet - " + 
+            'content': output#"SessionSpeechlet - " + 
         },
         'reprompt': {
             'outputSpeech': {
@@ -155,25 +155,25 @@ def get_table():
                 table[row[1]]=row[0]
     return table
 
-
 def get_welcome_response(help=False):
     """ If we wanted to initialize the session to have some attributes we could
     add those here 
     """
-    session_attributes = {"state":"1_1_1_1"}
+    session_attributes = {"state":"1_1_1_1", "fast":"False"}
     card_title = "Welcome"
     # table=get_table()
-    speech_output = "Welcome to the chopsticks arena ... " \
-                    "Today you will be competing against a robot in a really fun game. Please note "\
-                    "my hands are allways listed first. "\
-                    "You can place a move by saying something like move 1 2 1 1, "\
-                    "where the numbers specify the state"
+    speech_output = "Welcome to the chopsticks game. You go first and ask for help if needed."
     #+table["1_1_1_1"] #+ str(os.listdir())
     
     if help:
-        speech_output = "You will play chopsticks against a computer in this application" \
-                        " in order to say your move say something like move 1 1 1 2" \
-                        " following that I will make my move, and we will continue until the game ends "
+        speech_output = "Today you will be competing against a computer in a really fun game."\
+                        " This is the game chopsticks"\
+                        " Game play consists of updating the 4 numbers representing the state"\
+                        " The goal is to reduce the oponents hands to 0 in modulus 5."
+                        " Please note my hands are always listed first. "\
+                        " in order to say your move say move 1 1 1 2, or a similar phrase." \
+                        " following that I will make my move, and we will continue until the game ends. "\
+                        " once you understand how to play say, fast, to switch to a faster playing mode where I talk less"
 
     # If the user either does not reply to the welcome message or says something
     # that is not understood, they will be prompted again with this text.
@@ -187,7 +187,7 @@ def read_state(intent, session):
     reprompt_text="Input your move with a place (place a move) intent"
     should_end_session=False
     
-    session_attributes = {"state": get_state(session)}
+    session_attributes = {"state": get_state(session), "fast": get_fast(session)}
 
     state = session_attributes["state"]
     table = get_table()
@@ -199,6 +199,17 @@ def read_state(intent, session):
     return build_response(session_attributes, build_speechlet_response(
         intent['name'], speech_output, reprompt_text, should_end_session))
 
+# changes fast attribute 
+def set_fast(intent, session):
+    reprompt_text="Input your move with a place (place a move) intent"
+    should_end_session=False
+    
+    session_attributes = {"state": get_state(session), "fast": "True"}
+
+    speech_output = "Now in fast mode. Your move."
+
+    return build_response(session_attributes, build_speechlet_response(
+        intent['name'], speech_output, reprompt_text, should_end_session))
 
 # silently retrieves the current state from session, defaults to 1_1_1_1
 def get_state(session):
@@ -208,6 +219,14 @@ def get_state(session):
     else:
         return "1_1_1_1"
 
+# silently retrieve if the game is fast or not
+def get_fast(session):
+    # if the attribute exists
+    val = "False"
+    if session.get('attributes', {}) and "fast" in session.get('attributes', {}):
+        val = session['attributes']['fast']
+    return val
+
 # user places a move
 # then  alexa automatically places a move
 def place(intent, session):
@@ -216,23 +235,39 @@ def place(intent, session):
     """
     should_end_session = False
     card_title = "PlaceIntent"
-    session_attributes = {"state": get_state(session)}
+    session_attributes = {"state": get_state(session), "fast": get_fast(session)}
 
     state = session_attributes["state"]
+    fast  = session_attributes["fast"]
+
     table = get_table()
+
+    errorHappened=False
 
     # NEED TO GET NUMBERS OUT OF INTENT!!!!!!!!!!!!!!
     try:
-        proposed = intent['slots']['number']['value']
+        proposed = ""
+        for num in ['numbera', 'numberb', 'numberc', 'numberd']:
+            cur_value=intent['slots'][num]['value']
+            if cur_value in ["0","1","2","3","4"]:
+                proposed += str(cur_value)
+            else:
+                errorHappened=True
+            break
 
-        if " " not in proposed and len(proposed) == 4:
-            p=list(proposed)
-            proposed=" ".join(p)
+    except KeyError:
+        speech_output = "input valid 4 number move"
+        errorHappened=True
+
+    if not errorHappened:
+
+        p=list(proposed)
+        proposed=" ".join(p)
 
         speech_output = "old is " + state.replace("_", " ") + " and new is " + proposed
-        proposed = freeze(formatState(unfreeze(proposed.replace(" ", "_"))))
+        proposed=freeze(formatState(unfreeze(proposed.replace(" ", "_"))))
         nms=nextMoves(unfreeze(flip_hands(state)))
-        nms= [flip_hands(nm) for nm in nms]
+        nms=[flip_hands(nm) for nm in nms]
         if proposed in nms:
             speech_output += " and this was accepted. "
 
@@ -243,6 +278,8 @@ def place(intent, session):
                 speech_output += "For my move I will update the current state to "
                 compMove = table[proposed]
                 speech_output += compMove.replace("_", " ")
+                if fast!="False":
+                    speech_output = "move "+ compMove.replace("_", " ")
                 session_attributes["state"] = compMove
                 if gameOver(unfreeze(compMove)):
                     speech_output+=" AND SO you lose. Play again soon."
@@ -257,8 +294,7 @@ def place(intent, session):
                             "Please try again. Valid moves include " + fnms
 
 
-    except KeyError:
-        speech_output = "input valid 4 number move"
+    
 
     # If the user either does not reply to the welcome message or says something
     # that is not understood, they will be prompted again with this text.
@@ -312,6 +348,8 @@ def on_intent(intent_request, session):
     elif intent_name == "ReadIntent":
         return read_state(intent, session)
         
+    elif intent_name == "FastIntent":
+        return set_fast(intent, session)
         
     elif intent_name == "AMAZON.CancelIntent" or intent_name == "AMAZON.StopIntent":
         return handle_session_end_request()
