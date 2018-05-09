@@ -1,5 +1,35 @@
+#AmazonAlexaLifeHacksChallenge
+Chopsticks is a fun game typically played by manipulating quantities held on your hands in order to send your opponent to the lose state 0 0. I have now made the game into an Alexa app as part of the Life Hacks contest. Have fun playing!
+
 Chopsticks is a fun game typically played by manipulating quantities held on your hands in order to send your opponent to the lose state 0 0.
 
 Chopsticks is a fun game which can help a player improve their memory and relax. 
 
 Chopsticks is a fun game typically played by manipulating quantities held on your hands in order to send your opponent to the lose state 0 0. It can also be played verbally. Both an exercise in memory and strategy this simple game is very fun to play. Valid moves include them "hit" where you add the quantity on your hand to the opponents hand (in mod 5). You may also "split" which entails redistributing the amounts on your own hand. If you provide an invalid move alexa will tell you which moves are valid so don't worry. This game will improve your reasoning skills, and increase your memory. Your ability to think is broadened when physical limitations such as sight are eliminated. Hopefully this game can serve to expidite the journey towards  effective mental visualization for many who play it, in addition to reducing the stress often enduced by life in a relaxing game.
+
+
+Chopsticks is a fun game in which you manipulate quantities typically held on users hands in order to hopefully send your opponent to the state 0,0. Valid moves including adding the quantity on you hand to the quantity on an opponents hand (in mod 5, ie. if you overflow past the number of fingers on your hand subtract 5 from your hand's number of fingers) and redistributing your own fingers (a hand with 1,4 could transform into a hand with 2, 3 for example). 
+This Alexa skill takes the game to an engaging new level. By verbally playing against a skilled opponent, this simple game will give you a new challenge. Will the skill help you improve your memory? Visualization techniques? Simply provide you with a quick relaxing and fun game to play? 
+This skill may appeal to a wide range of people, and you are encouraged to play it!
+
+Now for the skills demo.
+
+To activate the skill simply say
+"Alexa, open chopsticks game"
+
+Game play is also easy.
+
+You can say help for a reminder of the rules, but for now I will play a fast game.
+
+Say set mode to fast
+
+then 
+
+1211
+1212
+1203
+1200
+
+I lost
+
+Can you beat the bot?
