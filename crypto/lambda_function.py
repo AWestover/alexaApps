@@ -185,7 +185,7 @@ def on_intent(intent_request, session):
     intent = intent_request['intent']
     intent_name = intent_request['intent']['name']
 
-    if intent_name == "AMAZON.HelpIntent":
+    if intent_name == "AMAZON.HelpIntent" or intent_name == "AMAZON.FallbackIntent":
         return get_welcome_response(help=True)
 
     elif intent_name == "SetMsgIntent":

@@ -1,0 +1,8 @@
+lesssons learned
+
+must define all intents
+
+dont use deprecated stuff
+
+amazon.SearchQuery
+works for just getting what they said
