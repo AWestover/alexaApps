@@ -158,8 +158,10 @@ def get_table():
 def get_welcome_response(help=False):
     """ If we wanted to initialize the session to have some attributes we could
     add those here 
+
+    Note: This will reset the game...
     """
-    session_attributes = {"state":"1_1_1_1", "fast":"False"}
+    session_attributes = {"state":"1_1_1_1", "fast":False}
     card_title = "Welcome"
     # table=get_table()
     speech_output = "Welcome to the chopsticks game. You go first and ask for help if needed."
@@ -169,23 +171,29 @@ def get_welcome_response(help=False):
         speech_output = "Today you will be competing against a computer in a really fun game."\
                         " This is the game chopsticks"\
                         " Game play consists of updating the 4 numbers representing the state"\
-                        " The goal is to reduce the oponents hands to 0 in modulus 5."
+                        " The goal is to reduce the oponents hands to 0 in modulus 5."\
                         " Please note my hands are always listed first. "\
                         " in order to say your move say move 1 1 1 2, or a similar phrase." \
                         " following that I will make my move, and we will continue until the game ends. "\
-                        " once you understand how to play say, fast, to switch to a faster playing mode where I talk less"
+                        " once you understand how to play say fast to switch to a faster playing mode where I talk less."\
+                        " Be warned that in referring back to the instructions the game is reset, "\
+                        " so do not ask for help again unless you need it."
 
     # If the user either does not reply to the welcome message or says something
     # that is not understood, they will be prompted again with this text.
-    reprompt_text = "Please input your move with a place intent"
+    reprompt_text = "Please input your move"
     should_end_session = False
+
     return build_response(session_attributes, build_speechlet_response(
         card_title, speech_output, reprompt_text, should_end_session))
 
 # read out loud the current state
 def read_state(intent, session):
-    reprompt_text="Input your move with a place (place a move) intent"
+    reprompt_text="Input your move with a place intention"
     should_end_session=False
+
+    card_title = "Reading State"  
+    # intent['name']
     
     session_attributes = {"state": get_state(session), "fast": get_fast(session)}
 
@@ -193,23 +201,27 @@ def read_state(intent, session):
     table = get_table()
     recommendedMove = table[state]
 
-    speech_output = "The current state is " + state.replace("_", " ") + " and" \
-                    " the current recommended move is " + recommendedMove.replace("_"," ")
+    speech_output = "The current state is " + state.replace("_", " ") +"."#+ " and" \
+                    #" the current recommended computer move is " + recommendedMove.replace("_"," ")
     
+    speech_output += " Now place your move accordingly, by saying the new state."
+
     return build_response(session_attributes, build_speechlet_response(
-        intent['name'], speech_output, reprompt_text, should_end_session))
+        card_title, speech_output, reprompt_text, should_end_session))
 
 # changes fast attribute 
 def set_fast(intent, session):
     reprompt_text="Input your move with a place (place a move) intent"
     should_end_session=False
+
+    card_title = "Setting Fast Mode"
     
-    session_attributes = {"state": get_state(session), "fast": "True"}
+    session_attributes = {"state": get_state(session), "fast": True}
 
     speech_output = "Now in fast mode. Your move."
 
     return build_response(session_attributes, build_speechlet_response(
-        intent['name'], speech_output, reprompt_text, should_end_session))
+        card_title, speech_output, reprompt_text, should_end_session))
 
 # silently retrieves the current state from session, defaults to 1_1_1_1
 def get_state(session):
@@ -222,7 +234,7 @@ def get_state(session):
 # silently retrieve if the game is fast or not
 def get_fast(session):
     # if the attribute exists
-    val = "False"
+    val = False
     if session.get('attributes', {}) and "fast" in session.get('attributes', {}):
         val = session['attributes']['fast']
     return val
@@ -234,15 +246,18 @@ def place(intent, session):
     add those here
     """
     should_end_session = False
-    card_title = "PlaceIntent"
+    card_title = "Moves"
     session_attributes = {"state": get_state(session), "fast": get_fast(session)}
 
     state = session_attributes["state"]
     fast  = session_attributes["fast"]
 
     table = get_table()
-
+    
     errorHappened=False
+
+
+    speech_output=""
 
     # NEED TO GET NUMBERS OUT OF INTENT!!!!!!!!!!!!!!
     try:
@@ -253,18 +268,18 @@ def place(intent, session):
                 proposed += str(cur_value)
             else:
                 errorHappened=True
-            break
+                break
 
-    except KeyError:
-        speech_output = "input valid 4 number move"
-        errorHappened=True
+    except:
+        speech_output += "input valid 4 number move"
+        errorHappened = True
 
     if not errorHappened:
 
         p=list(proposed)
         proposed=" ".join(p)
 
-        speech_output = "old is " + state.replace("_", " ") + " and new is " + proposed
+        speech_output += "Old is " + state.replace("_", " ") + " and new is " + proposed
         proposed=freeze(formatState(unfreeze(proposed.replace(" ", "_"))))
         nms=nextMoves(unfreeze(flip_hands(state)))
         nms=[flip_hands(nm) for nm in nms]
@@ -272,17 +287,17 @@ def place(intent, session):
             speech_output += " and this was accepted. "
 
             if gameOver(unfreeze(proposed)):
-                speech_output += " And so you WIN! GREAT JOB. Play again soon"
+                speech_output += " And so you win! Great job. Please play again soon."
                 should_end_session = True
             else:
                 speech_output += "For my move I will update the current state to "
                 compMove = table[proposed]
                 speech_output += compMove.replace("_", " ")
-                if fast!="False":
+                if fast:
                     speech_output = "move "+ compMove.replace("_", " ")
                 session_attributes["state"] = compMove
                 if gameOver(unfreeze(compMove)):
-                    speech_output+=" AND SO you lose. Play again soon."
+                    speech_output+=" And so you lose. Play again soon."
                     should_end_session=True
                 else:
                     speech_output += ". It is now your turn."
@@ -299,6 +314,10 @@ def place(intent, session):
     # If the user either does not reply to the welcome message or says something
     # that is not understood, they will be prompted again with this text.
     reprompt_text = "Place a move"
+
+    if len(speech_output)==0:
+        speech_output = "Invalid move, please give your move in the format move 1 1 1 1"\
+                        " with the desired state substituted for these nubmers"
 
     return build_response(session_attributes, build_speechlet_response(
         card_title, speech_output, reprompt_text, should_end_session))
