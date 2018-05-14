@@ -6,9 +6,6 @@ Caesar cipher your text!
 
 """
 
-import csv
-import os
-
 # --------------- Helpers that build all of the responses ----------------------
 
 def build_speechlet_response(title, output, reprompt_text, should_end_session):
@@ -73,11 +70,11 @@ def get_welcome_response(help=False):
     speech_output = "Welcome to the Caesar Cipher skill. "\
         "I can encrypt your text or decrypt it. "\
         "Tell me your message and the shift key."
-    
+
     if help:
         speech_output = "I shift the letters in your message by a number,"\
-        " cycling back from z to a when i overflow (ie mod 26)"\
-        "please input a message and a key"
+        " cycling back from z to a when i overflow. In otherwords this happens in modulus 26."\
+        "please input a message and a key. By saying my key is 1, or my message is bob."
 
     # If the user either does not reply to the welcome message or says something
     # that is not understood, they will be prompted again with this text.
@@ -89,12 +86,21 @@ def get_welcome_response(help=False):
 
 # read encryption
 
-# changes key attribute 
+# changes key attribute
 def set_key(intent, session):
     card_title = "Reading key"
+    should_end_session=False  # might change...
 
     cmsg = get_msg(session)
-    ckey = int(intent['slots']['num']['value'])
+    try:
+    	ckey = int(intent['slots']['num']['value'])
+    except KeyError:
+    	session_attributes = {"key":False, "msg":cmsg}
+    	speech_output="please input a key"
+    	reprompt_text="please input a key"
+    	return build_response(session_attributes, build_speechlet_response(
+        card_title, speech_output, reprompt_text, should_end_session))
+
     if cmsg and ckey:
         scmsg = shift(cmsg, ckey)
         speech_output = "OK. Your encrypted message is " + scmsg + ". Once again, your message is " + longify(scmsg) + ". Thank you"
@@ -103,7 +109,6 @@ def set_key(intent, session):
     else:
         speech_output = "Your key is " + str(ckey) + ". Now input a message"
         reprompt_text = "Now input a message"
-        should_end_session = False
 
     session_attributes = {"key":ckey, "msg":cmsg}
 
@@ -112,12 +117,21 @@ def set_key(intent, session):
     return build_response(session_attributes, build_speechlet_response(
         card_title, speech_output, reprompt_text, should_end_session))
 
-# changes message attribute 
+# changes message attribute
 def set_msg(intent, session):
     card_title = "Reading message"
+    should_end_session = False  # might be changed if key and message are both fulfilled
 
-    cmsg = intent['slots']['msg']['value']
     ckey = get_key(session)
+    try:
+    	cmsg = intent['slots']['msg']['value']
+    except KeyError:
+    	session_attributes = {"key":ckey, "msg":False}
+    	speech_output="please input a message"
+    	reprompt_text="please input a message"
+    	return build_response(session_attributes, build_speechlet_response(
+        card_title, speech_output, reprompt_text, should_end_session))
+
     if cmsg and ckey:
         scmsg=shift(cmsg, ckey)
         speech_output = "OK. Your encrypted message is " + scmsg + ". Once again, your message is " + ",".join(list(scmsg)) + ". Thank you"
@@ -126,7 +140,6 @@ def set_msg(intent, session):
     else:
         speech_output = "Your message is " + cmsg + ". Now input a key"
         reprompt_text = "Now input a key"
-        should_end_session = False
 
     session_attributes = {"key":ckey, "msg":cmsg}
 
